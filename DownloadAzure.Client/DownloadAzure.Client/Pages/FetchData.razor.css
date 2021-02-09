@@ -1,0 +1,8 @@
+﻿.imgClass {
+	width: 200px;
+}
+
+	.imgClass:hover {
+		cursor: pointer;
+		opacity: 0.8;
+	}

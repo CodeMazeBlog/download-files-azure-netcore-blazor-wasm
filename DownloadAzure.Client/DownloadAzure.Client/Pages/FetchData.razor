@@ -1,0 +1,54 @@
+﻿@page "/fetchdata"
+@inject HttpClient Http
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (blobs == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	foreach (var blob in blobs)
+	{
+		<div style="border:1px solid gray; margin-bottom:10px; width: 202px;">
+			<img src="@blob.Uri" alt="@blob.Name" @onclick="() => Download(blob.Name, blob.ContentType)"
+				 class="imgClass"/>
+		</div>
+	}
+}
+
+@code {
+	[Inject]
+	public IJSRuntime JSRuntime { get; set; }
+
+	private BlobDto[] blobs;
+	private IJSObjectReference  _jsModule;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./scripts/downloadScript.js");
+		blobs = await Http.GetFromJsonAsync<BlobDto[]>("blobs");
+	}
+
+	private async Task Download(string name, string contentType)
+	{
+		var response = await Http.GetByteArrayAsync("download/" + name);
+
+		await _jsModule.InvokeVoidAsync("download", new 
+		{ 
+			ByteArray = response,
+			FileName = name,
+			ContentType = contentType
+		});
+	}
+
+	public class BlobDto
+	{
+		public string Name { get; set; }
+		public string Uri { get; set; }
+		public string ContentType { get; set; }
+	}
+}
